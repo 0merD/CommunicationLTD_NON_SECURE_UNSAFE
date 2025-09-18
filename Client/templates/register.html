@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Communication LTD{% endblock %}
+
+{% block content %}
+    <div class="auth-card">
+        <div class="card-header text-center">
+            <i class="bi bi-person-plus-fill fs-3 mb-2 text-primary"></i>
+            <h3>Create an Account</h3>
+            <p class="mb-0 opacity-75">Communication LTD</p>
+        </div>
+
+        <div class="card-body">
+            <!-- Configuration change alert -->
+            <div id="config-alert" class="alert alert-info alert-dismissible fade" role="alert" style="display: none;">
+                <i class="bi bi-info-circle"></i>
+                <strong>Password Requirements Updated!</strong>
+                The password requirements have been changed. Please review the updated requirements below.
+                <button type="button" class="btn-close" onclick="hideConfigAlert()"></button>
+            </div>
+
+            <!-- Password Requirements -->
+            <div class="password-requirements mb-3">
+                <h6><i class="bi bi-shield-check"></i> Password Requirements:</h6>
+                {% if password_requirements %}
+                    <ul>
+                        <li>At least <span id="min-length">{{ password_requirements.min_length }}</span> characters long
+                        </li>
+                        {% if password_requirements.uppercase %}
+                            <li>Contains uppercase letters (A-Z)</li>{% endif %}
+                        {% if password_requirements.lowercase %}
+                            <li>Contains lowercase letters (a-z)</li>{% endif %}
+                        {% if password_requirements.digits %}
+                            <li>Contains numbers (0-9)</li>{% endif %}
+                        {% if password_requirements.special %}
+                            <li>Contains special characters (!@#$%^&*)</li>{% endif %}
+                        {% if password_requirements.history_count %}
+                            <li>Cannot match your previous <span
+                                    id="history-count">{{ password_requirements.history_count }}</span> passwords
+                            </li>{% endif %}
+                    </ul>
+                {% else %}
+                    <ul>
+                        <li>Please contact your IT representative</li>
+                        <li>for up-to-date password limitations</li>
+                    </ul>
+                {% endif %}
+            </div>
+
+            <!-- Show error messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Registration Form -->
+            <form method="POST" action="/register">
+                <!-- Hidden field to track config hash -->
+                <input type="hidden" name="config_hash" id="config-hash" value="">
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" required
+                           placeholder="Enter username" value="{{ request.form.username if request.form.username }}">
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" required
+                           placeholder="Enter email" value="{{ request.form.email if request.form.email }}">
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control" id="password" name="password" required
+                               placeholder="Enter password">
+                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2"
+                                onclick="togglePassword('password', 'password-icon')"
+                                style="border: none; background: none;">
+                            <i class="bi bi-eye" id="password-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label">Confirm Password</label>
+                    <div class="position-relative">
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                               required
+                               placeholder="Re-enter password">
+                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2"
+                                onclick="togglePassword('confirm_password', 'confirm-password-icon')"
+                                style="border: none; background: none;">
+                            <i class="bi bi-eye" id="confirm-password-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-person-check"></i> Register
+                    </button>
+                </div>
+            </form>
+
+            <!-- Links -->
+            <div class="mt-3 text-center">
+                <a href="/login" class="text-decoration-none">Already have an account? Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentConfigHash = "";
+
+        // Check for config changes every 15 seconds
+        function checkConfigChanges() {
+            fetch('/api/config-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hash) {
+                        if (currentConfigHash && currentConfigHash !== data.hash) {
+                            // Config changed!
+                            showConfigAlert();
+                            updateRequirements(data.requirements);
+                        }
+                        currentConfigHash = data.hash;
+                        document.getElementById('config-hash').value = data.hash;
+                    }
+                })
+                .catch(error => {
+                    console.log('Config check failed:', error);
+                });
+        }
+
+        function showConfigAlert() {
+            const alert = document.getElementById('config-alert');
+            alert.style.display = 'block';
+            alert.classList.add('show');
+        }
+
+        function hideConfigAlert() {
+            const alert = document.getElementById('config-alert');
+            alert.classList.remove('show');
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 150);
+        }
+
+        function updateRequirements(requirements) {
+            if (requirements) {
+                document.getElementById('min-length').textContent = requirements.min_length;
+                if (requirements.history_count) {
+                    const historyElement = document.getElementById('history-count');
+                    if (historyElement) {
+                        historyElement.textContent = requirements.history_count;
+                    }
+                }
+            }
+        }
+
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("bi-eye");
+                icon.classList.add("bi-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("bi-eye-slash");
+                icon.classList.add("bi-eye");
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            checkConfigChanges(); // Initial check
+            setInterval(checkConfigChanges, 1000); // Check every 1 second
+        });
+    </script>
+{% endblock %}

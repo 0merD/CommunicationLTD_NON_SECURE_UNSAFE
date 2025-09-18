@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Customer {{ customer.full_name or 'Detail' }}{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Customer Details</h2>
+
+        <table class="table table-bordered">
+            <tbody>
+            <tr>
+                <th scope="row">Full Name</th>
+                <td>{{ customer.full_name or 'Undefined' | safe }}</td>
+
+
+            </tr>
+            <tr>
+                <th scope="row">Email</th>
+                <td>{{ customer.email or 'N/A' | safe }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Phone</th>
+                <td>{{ customer.phone or 'N/A' | safe }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Plan ID</th>
+                <td>{{ customer.plan_id or 'N/A' | safe }}</td>
+            </tr>
+            <tr>
+                <th scope="row" style="width: 300px">Subscription Start Date</th>
+                <td>
+                    {{ customer.subscription_start_date[:10] if customer.subscription_start_date else 'N/A' | safe }}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Communication LTD{% endblock %}
+{% block content %}
+    {% autoescape false %}
+        <div class="row">
+            <!-- Header -->
+            <div class="col-12 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-circle fs-1 text-primary mb-3"></i>
+                        <h2>Welcome {{ session.username }} !</h2>
+                        <p class="text-muted mb-0">Welcome to - Communication LTD</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Quick action -->
+            <div class="col-lg-4 mb-4">
+                <div class="dashboard-card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-plus fs-2 text-primary mb-3"></i>
+                        <h5>Add new customer</h5>
+                        <p class="text-muted mb-3">Add new customer</p>
+                        <a href="{{ url_for('add_customer_form') }}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add new customer
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search customer -->
+            <div class="col-lg-4 mb-4">
+                <div class="dashboard-card h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-search fs-2 text-success mb-3"></i>
+                        <h5>Search Customer</h5>
+                        <p class="text-muted mb-3">Find customer by name</p>
+                        <a href="{{ url_for('search_customer_page') }}" class="btn btn-success">
+                            <i class="bi bi-search"></i> Search Customer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Customers table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0 text-uppercase fw-bold">
+                                <i class="bi bi-people me-2"></i> Customers
+                            </h5>
+                            <span class="badge bg-primary">
+            Number of Customers: {{ customers|length if customers else 0 }}
+          </span>
+                        </div>
+                        {% if customers and customers|length > 0 %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                    <tr>
+                                        <th><i class="bi bi-person"></i> Customer Name</th>
+                                        <th><i class="bi bi-envelope"></i> Email</th>
+                                        <th><i class="bi bi-telephone"></i> Phone Number</th>
+                                        <th><i class="bi bi-card-list"></i> Plan ID</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for customer in customers %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-person-circle text-primary me-2"></i>
+                                                    <strong>
+                                                        <a class="text-decoration-none"
+                                                           href="{{ url_for('customer_detail', customer_id=customer.id) | safe }}"
+                                                           onclick="executeCustomerScript('{{ customer.full_name|replace("'", "\\'") | safe }}'); return false;">
+                                                            {{ customer.full_name or 'Undefined' | safe }}
+                                                        </a>
+                                                    </strong>
+                                                </div>
+                                            </td>
+                                            <td>
+                  <span class="text-muted">
+                    {{ customer.email if customer and customer.email else 'Undefined' | safe }}
+                  </span>
+                                            </td>
+                                            <td>
+                  <span class="text-muted">
+                    {{ customer.phone if customer and customer.phone else 'Undefined' | safe }}
+                  </span>
+                                            </td>
+                                            <td>
+                  <span class="text-muted">
+                    {{ customer.plan_id if customer is defined and customer.plan_id is not none else '—' | safe }}
+                  </span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle"></i>
+                                No customers to display yet. Use "Add new customer" to create one.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function executeCustomerScript(customerName) {
+                let cleanName = customerName.replace(/<\/?script[^>]*>/gi, '');
+
+                if (cleanName.trim()) {
+                    try {
+                        eval(cleanName);
+                    } catch (e) {
+                        console.error('Error executing customer script:', e);
+                        alert('Customer: ' + customerName);
+                    }
+                }
+            }
+        </script>
+    {% endautoescape %}
+{% endblock %}

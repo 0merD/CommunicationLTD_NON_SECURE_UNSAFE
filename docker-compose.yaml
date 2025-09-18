@@ -1,0 +1,62 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./Server/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./Server:/app/Server
+      - ./config:/config
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: CommunicationLTD
+      APP_NAME: "CommunicationLTD"
+      APP_VERSION: "1.0.0"
+      CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      CONFIG_DIR: /config
+      PASSWORD_POLICY_FILE: password_policy.yaml
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: CommunicationLTD
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 30s
+
+  client:
+    build:
+      context: ./Client
+    volumes:
+      - ./Client:/app
+      - ./.env:/app/.env
+      - ./config:/config
+    environment:
+      - FLASK_ENV=development
+    ports:
+      - "5173:5173"
+    depends_on:
+      - app
+
+volumes:
+  db_data:

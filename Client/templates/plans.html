@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %} Communication LTD{% endblock %}
+
+{% block content %}
+    <div class="container mt-5" style="max-width: 600px;">
+        <div class="row g-4">
+            {% for plan in plans %}
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ plan.name }}</h5>
+                            <p class="card-text mb-1">Upload Speed: {{ plan.upload_speed_mbps }} Mbps</p>
+                            <p class="card-text mb-1">Download Speed: {{ plan.download_speed_mbps }} Mbps</p>
+                            <p class="card-text fw-bold mb-3">Price: ${{ plan.price }}</p>
+                            <!--                    <a href="#" class="btn btn-primary mt-auto">Subscribe</a>-->
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

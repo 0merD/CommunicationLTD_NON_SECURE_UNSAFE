@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Search Customer - Communication LTD{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="dashboard-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-search fs-1 text-primary mb-3"></i>
+                    <h2>Customer Search</h2>
+                    <p class="text-muted mb-0">Search for customers by name</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-body">
+                    <h5 class="mb-4 text-uppercase fw-bold">
+                        <i class="bi bi-search me-2"></i> Search Customer
+                    </h5>
+
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <input
+                                    type="text"
+                                    id="searchInput"
+                                    class="form-control"
+                                    placeholder="Enter customer name..."
+                                    onkeypress="handleKeyPress(event)"
+                            >
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100" onclick="searchCustomer()">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div id="loading" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Searching...</p>
+                    </div>
+
+                    <!-- Results container -->
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchCustomer();
+            }
+        }
+
+        async function searchCustomer() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+
+            if (!searchTerm) {
+                alert('Please enter a customer name to search');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const resultsContainer = document.getElementById('searchResults');
+
+            // Show loading
+            loading.classList.remove('d-none');
+            resultsContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(`/search-customer-api/${encodeURIComponent(searchTerm)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({}) // Empty body - token comes from session
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`HTTP error! status: ${response.status}, details: ${errorData.error || 'Unknown error'}`);
+                }
+
+                const customers = await response.json();
+
+                console.log('DEBUG: Received customers:', customers);
+
+                // Hide loading
+                loading.classList.add('d-none');
+
+                displayResults(customers);
+
+            } catch (error) {
+                console.error('Search error:', error);
+                loading.classList.add('d-none');
+                resultsContainer.innerHTML = `
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i>
+        Error searching customers: ${error.message}
+      </div>
+    `;
+            }
+        }
+
+        function displayResults(customers) {
+            const resultsContainer = document.getElementById('searchResults');
+
+            if (customers.length === 0) {
+                resultsContainer.innerHTML = `
+      <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        No customers found matching your search.
+      </div>
+    `;
+                return;
+            }
+
+            let html = `
+    <div class="alert alert-success">
+      <i class="bi bi-check-circle"></i>
+      Found ${customers.length} customer(s)
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th><i class="bi bi-person"></i> Customer Name</th>
+            <th><i class="bi bi-envelope"></i> Email</th>
+            <th><i class="bi bi-telephone"></i> Phone Number</th>
+            <th><i class="bi bi-card-list"></i> Plan ID</th>
+            <th><i class="bi bi-calendar"></i> Start Date</th>
+            <th><i class="bi bi-check-circle"></i> Status</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+            customers.forEach(customer => {
+                html += `
+      <tr>
+        <td>
+          <div class="d-flex align-items-center">
+            <i class="bi bi-person-circle text-primary me-2"></i>
+            <strong>${customer.full_name || 'Undefined'}</strong>
+          </div>
+        </td>
+        <td>
+          <span class="text-muted">${customer.email || 'Undefined'}</span>
+        </td>
+        <td>
+          <span class="text-muted">${customer.phone || 'Undefined'}</span>
+        </td>
+        <td>
+          <span class="text-muted">${customer.plan_id || '—'}</span>
+        </td>
+        <td>
+          <span class="text-muted">${customer.subscription_start_date || '—'}</span>
+        </td>
+        <td>
+          <span class="badge ${customer.active ? 'bg-success' : 'bg-danger'}">
+            ${customer.active ? 'Active' : 'Inactive'}
+          </span>
+        </td>
+      </tr>
+    `;
+            });
+
+            html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+            resultsContainer.innerHTML = html;
+        }
+    </script>
+{% endblock %}

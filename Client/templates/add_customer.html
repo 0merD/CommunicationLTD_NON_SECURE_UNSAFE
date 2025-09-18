@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Add Customer - Communication LTD{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <h2 class="text-center mb-4">Add New Customer</h2>
+
+                    <form method="post" action="{{ url_for('add_customer_submit') }}">
+                        <!-- Name -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                            <input
+                                    type="text"
+                                    class="form-control"
+                                    id="name"
+                                    name="name"
+                                    placeholder="Enter customer name"
+                                    required
+                            />
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input
+                                    type="email"
+                                    class="form-control"
+                                    id="email"
+                                    name="email"
+                                    placeholder="Enter email"
+                            />
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input
+                                    type="text"
+                                    class="form-control"
+                                    id="phone"
+                                    name="phone"
+                                    placeholder="Enter phone number"
+                            />
+                        </div>
+
+                        <!-- Plan ID (select 1..5) -->
+                        <div class="mb-4">
+                            <label for="plan_id" class="form-label">Plan ID</label>
+                            <select class="form-select" id="plan_id" name="plan_id" aria-label="Select plan id">
+                                <option value="" selected>None</option>
+                                <option value="1">1 - Basic</option>
+                                <option value="2">2 - Standard</option>
+                                <option value="3">3 - Pro</option>
+                                <option value="4">4 - Business</option>
+                                <option value="5">5 - Enterprise</option>
+                            </select>
+                            <div class="form-text">Optional. Choose 1–5 or leave as “None”.</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Add Customer</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

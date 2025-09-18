@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+sqlmodel
+sqlalchemy
+pymysql
+cryptography
+bcrypt
+pydantic
+pydantic[email]
+pyyaml
+python-jose[cryptography]

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Auth API Test (No JS)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        section {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        input, button {
+            margin: 5px 0;
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<h1>FastAPI Auth Endpoints Test (No JavaScript)</h1>
+
+<section>
+    <h2>Register</h2>
+    <form method="post" action="http://127.0.0.1:8000/register">
+        <input name="username" placeholder="Username" required/>
+        <input name="email" type="email" placeholder="Email" required/>
+        <input name="password" type="password" placeholder="Password" required/>
+        <button type="submit">Register</button>
+    </form>
+</section>
+
+<section>
+    <h2>Login</h2>
+    <form method="post" action="http://127.0.0.1:8000/login">
+        <input name="username" placeholder="Username" required/>
+        <input name="password" type="password" placeholder="Password" required/>
+        <button type="submit">Login</button>
+    </form>
+</section>
+
+<section>
+    <h2>Change Password</h2>
+    <form method="post" action="http://127.0.0.1:8000/password/change">
+        <input name="old_password" type="password" placeholder="Old Password" required/>
+        <input name="new_password" type="password" placeholder="New Password" required/>
+        <button type="submit">Change Password</button>
+    </form>
+</section>
+
+<section>
+    <h2>Forgot Password</h2>
+    <form method="post" action="http://127.0.0.1:8000/password/forgot">
+        <input name="email" type="email" placeholder="Email" required/>
+        <button type="submit">Send Reset Token</button>
+    </form>
+</section>
+
+<section>
+    <h2>Reset Password</h2>
+    <form method="post" action="http://127.0.0.1:8000/password/reset">
+        <input name="email" type="email" placeholder="Email" required/>
+        <input name="token" placeholder="Reset Token" required/>
+        <input name="new_password" type="password" placeholder="New Password" required/>
+        <button type="submit">Reset Password</button>
+    </form>
+</section>
+
+</body>
+</html>
+
+<script>
+    // Select all forms on the page
+    document.querySelectorAll("form").forEach(form => {
+        form.addEventListener("submit", async event => {
+            event.preventDefault(); // stop normal form submit
+
+            // Gather form data into an object
+            const data = {};
+            new FormData(form).forEach((value, key) => {
+                data[key] = value;
+            });
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                console.log("Response:", result);
+
+                alert("Success: " + JSON.stringify(result));
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Error: " + err.message);
+            }
+        });
+    });
+</script>
