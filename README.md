@@ -1,3 +1,8 @@
+!!!!!! THIS IS A NON SECURE VERSION FOR DEMONSTRATIO/SUBMISSION REASONS DO NOT USE IN A REAL PROJECT!!!!!
+
+
+
+
 # Communication_LTD - Cybersecurity Project
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -163,8 +168,8 @@ Communication_LTD/
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd Communication_LTD
+git clone <https://github.com/0merD/CommunicationLTD_Secure> #to run the unsecure version clone this: git clone <https://github.com/0merD/CommunicationLTD_Secure>
+cd CommunicationLTD_Secure
 
 ```
 
@@ -250,14 +255,22 @@ def sanitize_input(value: str) -> str:
 
 <!-- PLACEHOLDER: Insert vulnerable XSS code here -->
 ```python
-# TODO: Add vulnerable version that accepts raw input without sanitization
+def sanitize_input(value: str) -> str:
+    """
+    VULNERABLE VERSION - No HTML escaping allows XSS attacks
+    """
+    if value is None:
+        return ""
+    return value.strip()
 ```
 
 #### Test Case: Stored XSS Attack
 
 **Malicious Payload:**
+
+(insert in add customer in the name field and after this, click on the customer name in dashboard)
 ```html
-<script>alert('XSS Attack!')</script>
+<script>alert('XSS Attack!')</script> 
 
 
 ```
@@ -284,32 +297,85 @@ if db.exec(select(User).where(User.email == data.email)).first():
 These database operations use SQLModel ORM's automatic parameterized queries to prevent SQL injection attacks by treating user input as data parameters rather than executable SQL code. The .where() clauses automatically bind values like data.username as safe parameters, ensuring that malicious payloads such as admin'; DROP TABLE users; -- are treated as literal strings instead of SQL commands. This approach provides comprehensive SQL injection protection without requiring manual input sanitization since the ORM handles all parameterization automatically.
 
 #### Vulnerable Implementation
+one of the examples:
 
-<!-- PLACEHOLDER: Insert vulnerable SQL injection code here -->
 ```python
-# TODO: Add vulnerable version with string concatenation queries
+def @router.get("/search-vulnerable/{name}")
+def search_customer_vulnerable(name: str, current_user: User = Depends(get_current_user)):
+    try:
+        with insecure_connection.cursor() as db:
+
+            query = f"SELECT * FROM customers WHERE full_name LIKE '{name}'"
+            print(f"Executing query: {query}")
+
+            db.execute(query)
+            results = db.fetchall()
+            sleep(0.01)
+            return results
+
+    except MySQLError as e:
+        print(f"SQL error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"SQL error: {str(e)}")
 ```
 
+```python
+@router.post("/login")
+def login(data: LoginIn, request: Request, db: Session = Depends(get_session)):
+    ip = request.client.host if request.client else None
+
+    try:
+        query = f"SELECT * FROM users WHERE username = '{data.username}'"
+        print(f"Executing query: {query}")
+
+        with insecure_connection.cursor() as cursor:
+            cursor.execute(query)
+        user = cursor.fetchone()
+        sleep(0.2)
+        if not user:
+            raise HTTPException(status_code=400, detail="User not found")
+    except MySQLError as e:
+        print(f"MySQL Error: {e}")
+        raise HTTPException(status_code=500, detail=f"SQL Error: {e}")
+```
+
+
+
+```python
+@router.post("/register")
+def register(data: RegisterIn, background_tasks: BackgroundTasks, db: Session = Depends(get_session)):
+    try:
+        query = f"SELECT * FROM users WHERE username = '{data.username}'"
+        print(f"Executing query: {query}")
+        with insecure_connection.cursor() as cursor:
+            cursor.execute(query)
+        result = cursor.fetchone()
+        sleep(0.1)
+        if result:
+            raise HTTPException(status_code=400, detail="Username already taken")
+
+        query = f"SELECT * FROM users WHERE email = '{data.email}'"
+        print(f"Executing query: {query}")
+        with insecure_connection.cursor() as cursor:
+            cursor.execute(query)
+        result = cursor.fetchone()
+        sleep(0.1)
+        if result:
+            raise HTTPException(status_code=400, detail="Email already exists")
+    except MySQLError as e:
+        print(f"MySQL Error: {e}")
+        raise HTTPException(status_code=500, detail=f"SQL Error: {e}")
+
+```
 
 #### Test Case: SQL Injection Attack
 
 **Malicious Payload:**
+
+(insert in search customer/login/register field)
 ```sql
-admin'; DROP TABLE users; --
+ test'; SET FOREIGN_KEY_CHECKS = 0; DROP TABLE plans; -- .
 ```
 
-
-**Protection Mechanism:** SQLModel ORM automatically converts the query to a prepared statement:
-```sql
-SELECT * FROM users WHERE username = ? -- Parameter: "admin'; DROP TABLE users; --"
-```
-
-#### Test Case: Customer Data Manipulation
-
-**Malicious Payload:**
-```sql
-John'; DELETE FROM customers; --
-```
 
 **Database Connection Security (`Server/db/session.py`):**
 ```python
@@ -329,7 +395,6 @@ def get_session():
 **Security Mechanisms:**
 - **Automatic Parameterization**: SQLModel ORM converts all queries to prepared statements by design
 - **Type Safety**: Pydantic models enforce strict data typing preventing type confusion attacks
-- **Connection Pooling**: Prevents connection exhaustion and ensures proper resource management
 - **Context Management**: Database sessions are properly closed preventing connection leaks
 
 ### Additional Security Implementations
@@ -388,6 +453,8 @@ The system provides comprehensive REST API documentation with automatic OpenAPI/
 | GET | `/api/v1/customers/{id}` | Get specific customer information by customer ID |
 | PUT | `/api/v1/customers/{id}` | Update existing customer information and service plan |
 | DELETE | `/api/v1/customers/{id}` | Remove customer record from the system |
+| GET | `/api/v1/customers/search/{name}` | Search customers by name with input sanitization and validation |
+| GET | `/api/v1/customers/search-vulnerable/{name}` | Search customers by name - vulnerable endpoint for security demonstrations |
 | **Service Plans** |
 | GET | `/api/v1/plans` | Retrieve all available internet service plans with pricing and speeds |
 
@@ -398,3 +465,4 @@ Most endpoints require JWT authentication via the `Authorization: Bearer <token>
 ### Response Format
 
 All API responses follow standard JSON format with appropriate HTTP status codes. Error responses include detailed validation messages and error codes for debugging purposes.
+
